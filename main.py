@@ -1,11 +1,12 @@
 from urllib3.util import parse_url
+from urllib.parse import unquote
+
 import os
 import gzip
 import io
 
 import pandas as pd
 import tldextract
-import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 import requests
 
@@ -60,6 +61,7 @@ def process_record(record: str) -> list | None:
             return None
         
         url = url.split(',"', 1)[1]
+        url = unquote(url)
 
         urllib3_url_parse = parse_url(url)
         path = urllib3_url_parse.path
@@ -71,6 +73,8 @@ def process_record(record: str) -> list | None:
                 port = 443
             elif scheme == 'http':
                 port = 80
+        if path:
+            path = unquote(path)
 
         tldextract_url_parse = tldextract.extract(url)
         domain = tldextract_url_parse.domain
@@ -88,7 +92,8 @@ def process_record(record: str) -> list | None:
             query_param,
             suffix,
             fqdn,
-            target
+            target,
+            url
         ]
 
     except Exception as ex:
@@ -123,7 +128,8 @@ def load_urlabuse_dataset() -> pd.DataFrame:
         'QUERY_PARAM',
         'SUFFIX',
         'FQDN',
-        'TARGET'
+        'TARGET',
+        'FULL_URL',
     ]
     df.to_csv('dataset.csv')
     print('save dataset as csv file')
@@ -132,3 +138,4 @@ def load_urlabuse_dataset() -> pd.DataFrame:
 
 if __name__ == '__main__':
     update_dataset_from_urlabuse()
+    # load_urlabuse_dataset()
